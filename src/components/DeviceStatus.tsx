@@ -24,6 +24,16 @@ const getTestStatusText = (status: TestStatus): string => {
   return statusMap[status] || '未知状态';
 };
 
+const getResultStatusText = (status: ResultStatus): string => {
+  const statusMap: Record<ResultStatus, string> = {
+    [ResultStatus.INIT]: '初始状态',
+    [ResultStatus.TESTING]: '测试中',
+    [ResultStatus.PASS]: '测试合格',
+    [ResultStatus.FAIL]: '测试不合格',
+  };
+  return statusMap[status] || '未知状态';
+};
+
 const getResultStatusIcon = (status: ResultStatus) => {
   switch (status) {
     case ResultStatus.PASS:
@@ -32,6 +42,8 @@ const getResultStatusIcon = (status: ResultStatus) => {
       return <XCircle className="w-6 h-6 text-red-500" />;
     case ResultStatus.TESTING:
       return <Gauge className="w-6 h-6 text-blue-500 animate-pulse" />;
+    case ResultStatus.INIT:
+      return <Gauge className="w-6 h-6 text-gray-400" />;
     default:
       return null;
   }
@@ -72,7 +84,7 @@ export default function DeviceStatus({ device }: DeviceStatusProps) {
         <div className="p-4 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-500">结果状态</div>
           <div className="mt-1 font-medium">
-            {device.testing ? '测试中' : '空闲'}
+            {getResultStatusText(device.resultStatus)}
           </div>
         </div>
       </div>

@@ -49,7 +49,17 @@ export default function TestRecords({ records }: TestRecordsProps) {
                     <span className="text-sm">{record.result}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-sm">{record.createTime}</td>
+                <td className="px-4 py-3 text-sm">
+                  {new Date(record.createTime).toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit', 
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                  }).replace(/\//g, '-')}
+                </td>
               </tr>
             ))}
           </tbody>
