@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Square, Scan } from 'lucide-react';
 import { DeviceDetail } from '../types/device';
 
@@ -8,8 +8,45 @@ interface TestControlProps {
   onStopTest: () => void;
 }
 
+declare global {
+  interface Window {
+    Capacitor: {
+      Plugins: {
+        Barcode: {
+          addListener: (eventName: string, callback: (data: { code: string }) => void) => {
+            remove: () => void;
+          };
+        };
+      };
+    };
+  }
+}
+
 export default function TestControl({ device, onStartTest, onStopTest }: TestControlProps) {
   const [sn, setSn] = useState('');
+
+  useEffect(() => {
+    // 监听扫码事件
+    if (window.Capacitor?.Plugins?.Barcode) {
+      const listener = window.Capacitor.Plugins.Barcode.addListener('scanned', (data) => {
+        try {
+          console.log('Received barcode data:', data);
+          if (data.code && !device.testing) {
+            setSn(data.code);
+            // 自动触发测试开始
+            onStartTest(data.code);
+          }
+        } catch (err) {
+          console.error('Error handling barcode data:', err);
+        }
+      });
+
+      // 清理监听器
+      return () => {
+        listener.remove();
+      };
+    }
+  }, [device.testing, onStartTest]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
