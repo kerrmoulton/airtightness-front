@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 重置按钮的默认样式 */
+@layer base {
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: transparent;
+    background-image: none;
+  }
+}
+
 @keyframes slide-up {
   from {
     transform: translateY(100%);
