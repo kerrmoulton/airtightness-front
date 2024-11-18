@@ -46,7 +46,6 @@ export default function DeviceDetailPage() {
     }
   }, [deviceId, showToast]);
 
-  // Set up automatic refresh for test records
   useInterval(fetchTestRecords, deviceDetail ? REFRESH_INTERVAL : null);
 
   useEffect(() => {
@@ -56,7 +55,6 @@ export default function DeviceDetailPage() {
     if (deviceId) {
       const numericDeviceId = Number(deviceId);
       
-      // Set up message handler
       ws.onMessage((message: WebSocketMessage) => {
         if (message.type === 'DEVICE_STATUS' && message.data) {
           setDeviceDetail(prev => ({
@@ -66,12 +64,10 @@ export default function DeviceDetailPage() {
         }
       });
 
-      // Subscribe when WebSocket is connected
       ws.onConnect(() => {
         ws.subscribe(numericDeviceId);
       });
 
-      // Initial subscription attempt
       ws.subscribe(numericDeviceId);
 
       return () => {
@@ -85,11 +81,9 @@ export default function DeviceDetailPage() {
     try {
       await deviceApi.startTest(deviceDetail.id, sn);
       showToast('测试已开始', 'success');
-      // Refresh test records immediately after starting a test
       fetchTestRecords();
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : '启动测试失败，请重试';
+      const message = err instanceof Error ? err.message : '启动测试失败，请重试';
       showToast(message, 'error');
       console.error('Error starting test:', err);
     }
@@ -100,11 +94,9 @@ export default function DeviceDetailPage() {
     try {
       await deviceApi.stopTest(deviceDetail.id);
       showToast('测试已停止', 'success');
-      // Refresh test records immediately after stopping a test
       fetchTestRecords();
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : '停止测试失败，请重试';
+      const message = err instanceof Error ? err.message : '停止测试失败，请重试';
       showToast(message, 'error');
       console.error('Error stopping test:', err);
     }
@@ -127,28 +119,30 @@ export default function DeviceDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          返回设备列表
-        </button>
-        <h1 className="text-2xl font-bold">{deviceDetail.name}</h1>
+    <div className="flex flex-col min-h-screen bg-gray-100">
+      {/* Mobile-friendly header */}
+      <div className="sticky top-0 z-50 bg-white shadow-md">
+        <div className="flex items-center h-14 px-4">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center justify-center w-10 h-10 -ml-2 hover:bg-gray-100 rounded-full"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-700" />
+          </button>
+          <h1 className="ml-2 text-lg font-medium truncate">{deviceDetail.name}</h1>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Content */}
+      <div className="flex-1 p-4 space-y-4">
         <DeviceStatus device={deviceDetail} />
         <TestControl
           device={deviceDetail}
           onStartTest={handleStartTest}
           onStopTest={handleStopTest}
         />
+        <TestRecords records={records} />
       </div>
-
-      <TestRecords records={records} />
     </div>
   );
 }
