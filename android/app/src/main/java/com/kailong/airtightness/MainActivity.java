@@ -152,22 +152,28 @@ public class MainActivity extends BridgeActivity {
     public void onBackPressed() {
         WebView webView = getBridge().getWebView();
         
-        // 执行 JavaScript 来检查是否可以返回
+        Log.d(TAG, "onBackPressed called");
+        
         webView.evaluateJavascript(
             "(function() { " +
-                "if (window.history.length > 1) {" +
+                "const isHomePage = window.location.pathname === '/';" +
+                "const hasHistory = window.history.length > 1;" +
+                "if (hasHistory && !isHomePage) {" +
                 "  window.history.back();" +
-                "  return true;" +
+                "  return 'navigate';" +
                 "} else {" +
-                "  return false;" +
+                "  return 'exit';" +
                 "}" +
             "})()",
             new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(String value) {
-                    // 如果返回 "false"，说明没有历史记录，则执行默认的返回行为（退出应用）
-                    if ("false".equals(value) || "null".equals(value)) {
+                    Log.d(TAG, "evaluateJavascript callback value: " + value);
+                    if ("\"exit\"".equals(value)) {  // 注意 JS 返回的字符串会被包含在双引号中
+                        Log.d(TAG, "On homepage or no history, exiting app");
                         MainActivity.super.onBackPressed();
+                    } else {
+                        Log.d(TAG, "Navigating back in history");
                     }
                 }
             }
