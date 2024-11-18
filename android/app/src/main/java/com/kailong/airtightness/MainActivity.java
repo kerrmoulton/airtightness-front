@@ -7,11 +7,16 @@ import android.widget.Toast;
 import com.getcapacitor.BridgeActivity;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "MainActivity";
     private StringBuilder scanBuilder = new StringBuilder();
     private BarcodePlugin barcodePlugin;
+    private BroadcastReceiver scanReceiver;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -28,6 +33,72 @@ public class MainActivity extends BridgeActivity {
         
         // 获取插件实例
         barcodePlugin = (BarcodePlugin) getBridge().getPlugin("Barcode").getInstance();
+        
+        // 注册广播接收器
+        registerScanReceiver();
+    }
+
+    private void registerScanReceiver() {
+        scanReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                // 输出完整的 intent 信息用于调试
+                Log.d(TAG, "Received intent action: " + intent.getAction());
+                Bundle extras = intent.getExtras();
+                if (extras != null) {
+                    for (String key : extras.keySet()) {
+                        Log.d(TAG, "Intent extra - " + key + ": " + extras.get(key));
+                    }
+                }
+
+                // 处理不同厂商的广播返回值（以下是常见的几种）
+                String scanResult = null;
+                
+                // 获取完整的key名称
+                for (String key : extras.keySet()) {
+                    if (key.endsWith("data_string")) {
+                        scanResult = intent.getStringExtra(key);
+                        Log.d(TAG, "Found data_string extra with key: " + key);
+                        break;
+                    } else if (key.endsWith("scannerdata")) {
+                        scanResult = intent.getStringExtra(key);
+                        Log.d(TAG, "Found scannerdata extra with key: " + key); 
+                        break;
+                    } else if (key.endsWith("data")) {
+                        scanResult = intent.getStringExtra(key);
+                        Log.d(TAG, "Found data extra with key: " + key);
+                        break;
+                    }
+                }
+
+                if (scanResult != null && !scanResult.isEmpty()) {
+                    Log.d(TAG, "Broadcast scan result: " + scanResult);
+                    // 发送到插件
+                    if (barcodePlugin != null) {
+                        barcodePlugin.handleScannedCode(scanResult);
+                    }
+                } else {
+                    Log.d(TAG, "No valid scan result found in intent");
+                }
+            }
+        };
+
+        // 注册广播，添加多个可能的 Action
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("android.intent.ACTION_DECODE_DATA");
+        filter.addAction("scan.rcv.message");
+        filter.addAction("com.android.server.scannerservice.broadcast");
+        registerReceiver(scanReceiver, filter);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // 注销广播接收器
+        if (scanReceiver != null) {
+            unregisterReceiver(scanReceiver);
+            scanReceiver = null;
+        }
     }
 
     @Override
