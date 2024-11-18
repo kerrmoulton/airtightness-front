@@ -11,6 +11,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.webkit.ValueCallback;
 
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "MainActivity";
@@ -145,5 +146,31 @@ public class MainActivity extends BridgeActivity {
             }
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public void onBackPressed() {
+        WebView webView = getBridge().getWebView();
+        
+        // 执行 JavaScript 来检查是否可以返回
+        webView.evaluateJavascript(
+            "(function() { " +
+                "if (window.history.length > 1) {" +
+                "  window.history.back();" +
+                "  return true;" +
+                "} else {" +
+                "  return false;" +
+                "}" +
+            "})()",
+            new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String value) {
+                    // 如果返回 "false"，说明没有历史记录，则执行默认的返回行为（退出应用）
+                    if ("false".equals(value) || "null".equals(value)) {
+                        MainActivity.super.onBackPressed();
+                    }
+                }
+            }
+        );
     }
 }
