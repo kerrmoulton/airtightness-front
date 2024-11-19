@@ -84,12 +84,18 @@ public class MainActivity extends BridgeActivity {
             }
         };
 
-        // 注册广播，添加多个可能的 Action
+        // 创建 IntentFilter
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.intent.ACTION_DECODE_DATA");
         filter.addAction("scan.rcv.message");
         filter.addAction("com.android.server.scannerservice.broadcast");
-        registerReceiver(scanReceiver, filter);
+
+        // Android 13 (API 33) 及以上版本使用新的注册方式
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(scanReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(scanReceiver, filter);
+        }
     }
 
     @Override
