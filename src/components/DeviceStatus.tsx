@@ -51,6 +51,7 @@ const getResultStatusIcon = (status: ResultStatus) => {
 
 export default function DeviceStatus({ device }: DeviceStatusProps) {
   const isError = device.testStatus >= TestStatus.SENSOR_ERROR;
+  const isOffline = !device.online;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -66,33 +67,35 @@ export default function DeviceStatus({ device }: DeviceStatusProps) {
         <div className="p-4 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-500">测试状态</div>
           <div className="mt-1 font-medium">
-            {getTestStatusText(device.testStatus)}
+            {device.testStatus !== null ? getTestStatusText(device.testStatus) : '离线'}
           </div>
         </div>
         <div className="p-4 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-500">压力值</div>
           <div className="mt-1 font-medium">
-            {device.pressureValue.toFixed(2)} MPa
+            {device.pressureValue !== null ? `${device.pressureValue.toFixed(2)} MPa` : '- -'}
           </div>
         </div>
         <div className="p-4 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-500">泄漏值</div>
           <div className="mt-1 font-medium">
-            {device.leakageValue.toFixed(3)} mL/min
+            {device.leakageValue !== null ? `${device.leakageValue.toFixed(3)} mL/min` : '- -'}
           </div>
         </div>
         <div className="p-4 bg-gray-50 rounded-lg">
           <div className="text-sm text-gray-500">结果状态</div>
           <div className="mt-1 font-medium">
-            {getResultStatusText(device.resultStatus)}
+            {device.resultStatus !== null ? getResultStatusText(device.resultStatus) : '离线'}
           </div>
         </div>
       </div>
 
-      {isError && (
-        <div className="mt-4 p-4 bg-red-50 rounded-lg flex items-center gap-2 text-red-700">
+      {(isError || isOffline) && (
+        <div className={`mt-4 p-4 rounded-lg flex items-center gap-2 ${
+          isOffline ? 'bg-gray-50 text-gray-700' : 'bg-red-50 text-red-700'
+        }`}>
           <AlertTriangle className="w-5 h-5" />
-          <span>{device.errorMessage || '设备发生错误'}</span>
+          <span>{isOffline ? '设备离线' : (device.errorMessage || '设备发生错误')}</span>
         </div>
       )}
     </div>
