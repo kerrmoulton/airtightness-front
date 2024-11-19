@@ -5,13 +5,14 @@ import {
   TestRecord,
   WebSocketMessage,
 } from '../types/device';
+import config from '../config/config';
 
-const API_BASE = 'https://klapi.kailong.net/test/mes/AirTightness/Device';
-const WS_BASE = 'wss://klapi.kailong.net/test/ws/mes/AirTightness/Device';
+const API_BASE = config.API_BASE;
+const WS_BASE = config.WS_BASE;
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 10000,
+  timeout: config.API_TIMEOUT,
 });
 
 interface ApiResponse<T> {
